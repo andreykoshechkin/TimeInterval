@@ -1,0 +1,61 @@
+import com.vaadin.annotations.Theme;
+import com.vaadin.server.VaadinRequest;
+import com.vaadin.ui.*;
+import com.vaadin.ui.themes.ValoTheme;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Theme("valo")
+public class CustomDropdownUI extends UI {
+
+    @Override
+    protected void init(VaadinRequest vaadinRequest) {
+        VerticalLayout layout = new VerticalLayout();
+
+        TextField textField = new TextField("Enter text:");
+        VerticalLayout popupContent = new VerticalLayout();
+        PopupView popupView = new PopupView(null, popupContent);
+        popupView.setHideOnMouseOut(false);
+
+        List<String> items = new ArrayList<>();
+        items.add("Apple");
+        items.add("Banana");
+        items.add("Cherry");
+        items.add("Date");
+        items.add("Elderberry");
+
+        textField.addValueChangeListener(e -> updatePopup(popupContent, items, textField.getValue(), popupView));
+        
+        layout.addComponents(textField, popupView);
+        layout.setSpacing(true);
+        layout.setMargin(true);
+        setContent(layout);
+    }
+
+    private void updatePopup(VerticalLayout popupContent, List<String> items, String input, PopupView popupView) {
+        popupContent.removeAllComponents();
+        
+        List<String> filteredItems = items.stream()
+                                          .filter(item -> item.toLowerCase().contains(input.toLowerCase()))
+                                          .collect(Collectors.toList());
+
+        for (String item : filteredItems) {
+            Label label = new Label(item);
+            label.addStyleName(ValoTheme.LABEL_H4);
+            label.addStyleName("dropdown-item");
+            label.addClickListener(e -> {
+                ((TextField) ((HorizontalLayout) popupContent.getParent().getParent()).getComponent(0)).setValue(item);
+                popupView.setPopupVisible(false);
+            });
+            popupContent.addComponent(label);
+        }
+
+        popupView.setPopupVisible(!filteredItems.isEmpty());
+    }
+
+    public static void main(String[] args) {
+        // This method is required to launch the Vaadin application as a standalone app
+        // When deploying to a servlet container, the servlet should be configured properly in web.xml
+       
