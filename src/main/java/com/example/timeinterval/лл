@@ -1,0 +1,92 @@
+public class DocumentProcessor {
+
+    // Переменная для хранения идентификаторов документов, требующих специального сообщения
+    private static final Set<Integer> DOCUMENT_IDS_WITH_SPECIAL_MESSAGE = Set.of(1, 5, 8, 10, 66, 126, 766);
+
+    public void processDocuments(List<Document> documents) {
+        for (Document document : documents) {
+            if ("dress".equals(document.getType())) {
+                processDressDocument(document);
+            } else if ("express".equals(document.getType())) {
+                processExpressDocument(document);
+            }
+        }
+    }
+
+    private void processDressDocument(Document document) {
+        // Логика обработки документов типа dress
+        System.out.println("Processing dress document with ID: " + document.getId());
+    }
+
+    private void processExpressDocument(Document document) {
+        // Логика обработки документов типа express
+        System.out.println("Processing express document with ID: " + document.getId());
+        
+        // Проверка, если ID документа находится в наборе DOCUMENT_IDS_WITH_SPECIAL_MESSAGE
+        if (DOCUMENT_IDS_WITH_SPECIAL_MESSAGE.contains(document.getId())) {
+            System.out.println("Special message for document ID: " + document.getId());
+        }
+
+        // Дополнительная логика для документов типа express
+        // ...
+    }
+}
+
+?????
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Set;
+
+public class DocumentProcessor {
+
+    // Переменная для хранения идентификаторов документов, требующих специального сообщения
+    private static final Set<Integer> DOCUMENT_IDS_WITH_SPECIAL_MESSAGE = Set.of(1, 5, 8, 10, 66, 126, 766);
+    
+    // Переменная для хранения идентификаторов заявок, для которых нужно записывать только имя пользователя
+    private static final Set<Integer> REQUEST_IDS_FOR_USERNAME = Set.of(5, 8, 10);
+
+    // Переменная для хранения идентификаторов заявок, для которых нужно записывать имя пользователя и текущую дату
+    private static final Set<Integer> REQUEST_IDS_FOR_USERNAME_AND_DATE = Set.of(432, 31);
+
+    public void processDocuments(List<Document> documents, String username) {
+        for (Document document : documents) {
+            if ("dress".equals(document.getType())) {
+                processDressDocument(document);
+            } else if ("express".equals(document.getType())) {
+                processExpressDocument(document, username);
+            }
+        }
+    }
+
+    private void processDressDocument(Document document) {
+        // Логика обработки документов типа dress
+        System.out.println("Processing dress document with ID: " + document.getId());
+    }
+
+    private void processExpressDocument(Document document, String username) {
+        // Логика обработки документов типа express
+        System.out.println("Processing express document with ID: " + document.getId());
+        
+        // Проверка, если ID документа находится в наборе DOCUMENT_IDS_WITH_SPECIAL_MESSAGE
+        if (DOCUMENT_IDS_WITH_SPECIAL_MESSAGE.contains(document.getId())) {
+            System.out.println("Special message for document ID: " + document.getId());
+        }
+
+        // Запись имени пользователя для определенных идентификаторов заявок
+        if (REQUEST_IDS_FOR_USERNAME.contains(document.getId())) {
+            document.setUsername(username);
+            System.out.println("Username set for document ID: " + document.getId() + " to " + username);
+        }
+
+        // Запись имени пользователя и текущей даты для определенных идентификаторов заявок
+        if (REQUEST_IDS_FOR_USERNAME_AND_DATE.contains(document.getId())) {
+            document.setUsername(username);
+            document.setDate(LocalDate.now());
+            System.out.println("Username and date set for document ID: " + document.getId() + " to " + username + " and " + LocalDate.now());
+        }
+
+        // Дополнительная логика для документов типа express
+        // ...
+    }
+}
