@@ -1,0 +1,47 @@
+-- Установка экрана на '1'
+setting.setScreen('creen_name', '1');
+
+-- Цикл по каждой записи в requestTable
+FOR i IN (SELECT * FROM requestTable WHERE NVL(reg_srv_code, 'non_srv') > 'bpa') LOOP
+    -- Инициализация филиала
+    Init_Filial(i.req_dat_id);
+
+    -- Обработка различных этапов запроса
+    CASE i.req_stage
+        WHEN 'H' THEN
+            IF NVL(getvalues('Новая обработка „ОБРАБОТКА', i.req_vc_pr1), 'S') = 'Д' THEN
+                process_external(i);
+            ELSE
+                SetPattern(i.request_fil_num, i.registry_id);
+            END IF;
+        WHEN 'Новое поступление' THEN
+            checkAccHandler(i.req_dat_id);
+            prepare_request(i);
+            create_main_client(i);
+        WHEN 'Создание представителя фирмы' THEN
+            create_presenters(i);
+        WHEN 'Старые поступления' THEN
+            L_cal_filial := getFilial(i);
+
+            IF (L_cal_filial <> i.req_fil_num) THEN
+                Init_Filial(NVL(L_cal_filial, i.reg_fil_num));
+            END IF;
+
+            IF (NVL(front_utils.GetSysParamsstr('COMMON_PARAMS', 'НОВЫЙ_ПРОЦЕСС_ОТКРЫТИЯ_СЧЕТА'), 'H') = 'H') THEN
+                -- Дополнительная обработка, если требуется
+            END IF;
+    END CASE;
+
+    -- Новая обработка для testTable
+    FOR res IN (SELECT * FROM testTable 
+                WHERE testTable.requestStage IN ('П', 'G', 'S', 'A', 'X')
+                AND testTable.requestExtCurrier = 'Д') LOOP
+        IF res.req_data_id IN ('П', 'G') OR (res.req_data_id = 'П' AND res.req_data_clientType = 'ЮЛ') THEN
+            ChangeStatus('Новая');
+            ChangeStage('Открытие счета');
+        ELSIF res.req_data_id IN ('S', 'A') THEN
+            ChangeStatus('Старая');
+            ChangeStage('Закрытие счета');
+        END IF;
+    END LOOP;
+END LOOP;
