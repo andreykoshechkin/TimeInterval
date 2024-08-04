@@ -1,0 +1,20 @@
+BEGIN
+    FOR res IN (SELECT * FROM testTable 
+                WHERE requestStage IN ('П', 'G', 'S', 'A', 'X')
+                AND requestExtCurrier = 'Д') LOOP
+        BEGIN
+            IF res.req_data_id IN ('П', 'G') OR (res.req_data_id = 'З' AND res.req_data_clientType = 'ЮЛ') THEN
+                ChangeStatus('Новая');
+                ChangeStage('Открытие счета');
+            ELSIF res.req_data_id IN ('S', 'A') THEN
+                ChangeStatus('Старая');
+                ChangeStage('Закрытие счета');
+            ELSE
+                DBMS_OUTPUT.PUT_LINE('Неизвестное значение req_data_id: ' || res.req_data_id);
+            END IF;
+        EXCEPTION
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('Ошибка при изменении статуса или стадии: ' || SQLERRM);
+        END;
+    END LOOP;
+END;
