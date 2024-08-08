@@ -1,0 +1,42 @@
+private void processDeliveryTaskResponse(DeliveryTaskResponseData response) {
+    if (response.getErrorMessages().isEmpty() && response.getResult().isPresent()) {
+        handleSuccessResponse(response);
+    } else {
+        handleErrorResponse(response);
+    }
+}
+
+private void handleSuccessResponse(DeliveryTaskResponseData response) {
+    String selectedDocuments = requestTask.getDocuments().stream()
+        .map(DeliveryDocuments::getTitle)
+        .collect(Collectors.joining(", "));
+
+    String successMessage = String.format(SUCCESS_CREATE_TASK, response.getTaskId().orElse("N/A"), selectedDocuments);
+
+    // Открываем страницу клиента
+    getUI().ifPresent(ui -> ui.access(() -> ui.getPage().open(response.getCustomerId(), "_blank")));
+
+    // Обновляем историю
+    updateHistory(successMessage, CREATE_REQUEST);
+}
+
+private void handleErrorResponse(DeliveryTaskResponseData response) {
+    String userErrorMessage = response.getErrorMessages().stream()
+        .collect(Collectors.joining("\n"));
+
+    String historyErrorMessage = response.getErrorMessages().stream()
+        .collect(Collectors.joining("; "));
+
+    String errMsg = String.format(ERROR_CREATE_TASK, userErrorMessage);
+    String errHistoryMsg = String.format(ERROR_CREATE_TASK_HISTORY, historyErrorMessage);
+
+    // Отображаем сообщение об ошибке пользователю
+    ConfirmDialog.showErrorMessage(errMsg, ERROR_CAPTION);
+
+    // Обновляем историю с сообщением об ошибке
+    updateHistory(errHistoryMsg, ERROR_CREATE_TASK);
+}
+
+private void updateHistory(String message, String actionType) {
+    requestAccountService.updateHistory(reqAccData.getRequestId(), message, actionType);
+}
