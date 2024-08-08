@@ -1,0 +1,53 @@
+private void processDeliveryTaskResponse(DeliveryTaskResponseData response) {
+    if (response.getErrorMessages().isEmpty() && response.getResult().isPresent()) {
+        processSuccessResponse(response);
+    } else {
+        processErrorResponse(response);
+    }
+}
+
+private void processSuccessResponse(DeliveryTaskResponseData response) {
+    String selectedDocuments = getSelectedDocumentsTitles();
+    String successMessage = createSuccessMessage(response.getTaskId().orElse(null), selectedDocuments);
+
+    openCustomerPage(response.getCustomerId());
+    updateHistory(successMessage, CREATE_REQUEST);
+}
+
+private void processErrorResponse(DeliveryTaskResponseData response) {
+    String userErrorMessage = String.join("\n", response.getErrorMessages());
+    String historyErrorMessage = String.join("; ", response.getErrorMessages());
+
+    showErrorDialog(userErrorMessage);
+    updateHistory(createErrorMessageForHistory(historyErrorMessage), ERROR_CREATE_TASK);
+}
+
+private String getSelectedDocumentsTitles() {
+    return requestTask.getDocuments().stream()
+        .map(DeliveryDocuments::getTitle)
+        .collect(Collectors.joining(", "));
+}
+
+private String createSuccessMessage(String taskId, String documents) {
+    if (taskId == null) {
+        taskId = "N/A";  // Либо можно бросить исключение, если taskId отсутствует
+    }
+    return String.format(SUCCESS_CREATE_TASK, taskId, documents);
+}
+
+private void openCustomerPage(String customerId) {
+    getUI().ifPresent(ui -> ui.access(() -> ui.getPage().open(customerId, "_blank")));
+}
+
+private void showErrorDialog(String message) {
+    String errMsg = String.format(ERROR_CREATE_TASK, message);
+    ConfirmDialog.showErrorMessage(errMsg, ERROR_CAPTION);
+}
+
+private String createErrorMessageForHistory(String historyErrorMessage) {
+    return String.format(ERROR_CREATE_TASK_HISTORY, historyErrorMessage);
+}
+
+private void updateHistory(String message, String actionType) {
+    requestAccountService.updateHistory(reqAccData.getRequestId(), message, actionType);
+}
